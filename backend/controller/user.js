@@ -71,3 +71,13 @@ export const showExpense=async(req,res)=>{
         res.status(500).send("Error fetching expenses");
     }
 }
+
+export const deleteExpense=async(req,res)=>{
+    try {
+        const { id } = req.params;
+        await Expense.destroy({ where: { id:id } });
+        res.status(200).json({ message: "Deleted successfully" });
+    } catch (err) {
+        res.status(500).json({ error: "Error deleting expense" });
+    }
+}
