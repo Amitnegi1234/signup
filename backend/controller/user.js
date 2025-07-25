@@ -1,5 +1,6 @@
 import User from "../models/user.js";
 import bcrypt from "bcrypt"
+import Expense from "../models/expense.js";
 export const addUser=async(req,res)=>{
     try {
         const {name,email,password}=req.body;
@@ -43,5 +44,30 @@ export const loginUser=async(req,res)=>{
         res.status(200).send("User logged in");
     } catch (error) {
         res.status(500).send("Server error");
+    }
+}
+
+export const addExpense=async(req,res)=>{
+    try {
+        const {amount,description,category}=req.body;
+        console.log("Received expense data:", req.body);
+        const expense=await Expense.create({
+            amount:amount,
+            description:description,
+            category:category
+        })
+        res.status(201).send("expense added");
+    } catch (error) {
+        console.error("Error in addExpense:", error);
+        res.status(500).send(error);
+    }
+}
+
+export const showExpense=async(req,res)=>{
+     try {
+        const expenses = await Expense.findAll();
+        res.status(200).json(expenses);
+    } catch (error) {
+        res.status(500).send("Error fetching expenses");
     }
 }
