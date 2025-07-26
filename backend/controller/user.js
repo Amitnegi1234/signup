@@ -1,6 +1,7 @@
 import User from "../models/user.js";
 import bcrypt from "bcrypt"
-import Expense from "../models/expense.js";
+import jwt from "jsonwebtoken"
+
 export const addUser=async(req,res)=>{
     try {
         const {name,email,password}=req.body;
@@ -25,7 +26,9 @@ export const addUser=async(req,res)=>{
         res.status(500).send(error.message)
     }
 }
-
+function generateAccessToken(id){
+    return jwt.sign({userId:id},process.env.JWT_SECRET)
+}
 export const loginUser=async(req,res)=>{
     try {
         const {email,password}=req.body;
@@ -41,43 +44,9 @@ export const loginUser=async(req,res)=>{
         if(!isMatch){
             return res.status(500).send("password incorrect");
         }
-        res.status(200).send("User logged in");
+        return res.status(200).json({success:true,message:"User logged in",token:generateAccessToken(user.id)});
     } catch (error) {
         res.status(500).send("Server error");
     }
 }
 
-export const addExpense=async(req,res)=>{
-    try {
-        const {amount,description,category}=req.body;
-        console.log("Received expense data:", req.body);
-        const expense=await Expense.create({
-            amount:amount,
-            description:description,
-            category:category
-        })
-        res.status(201).send("expense added");
-    } catch (error) {
-        console.error("Error in addExpense:", error);
-        res.status(500).send(error);
-    }
-}
-
-export const showExpense=async(req,res)=>{
-     try {
-        const expenses = await Expense.findAll();
-        res.status(200).json(expenses);
-    } catch (error) {
-        res.status(500).send("Error fetching expenses");
-    }
-}
-
-export const deleteExpense=async(req,res)=>{
-    try {
-        const { id } = req.params;
-        await Expense.destroy({ where: { id:id } });
-        res.status(200).json({ message: "Deleted successfully" });
-    } catch (err) {
-        res.status(500).json({ error: "Error deleting expense" });
-    }
-}
