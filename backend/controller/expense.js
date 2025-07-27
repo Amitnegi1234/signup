@@ -50,31 +50,22 @@ export const deleteExpense = async (req, res) => {
   }
 };
 
-
-
 export const getPremiumExpense = async (req, res) => {
   try {
-    const leaderBoard = await Expense.findAll({
+    const leaderBoard = await User.findAll({
       attributes: [
-        "loginUserId",
-        [db.fn("SUM", db.col("amount")), "totalExpense"]
+        'id',
+        'name',
+        [db.fn('SUM', db.col('expenses.amount')), 'totalExpense']
       ],
-      include: [
-        {
-          model: User,
-          attributes: ["name"]
-        }
-      ],
-      group: ["loginUserId"],
-      order: [[db.fn("SUM", db.col("amount")), "DESC"]]
+      include: [{
+        model: Expense,
+        attributes: []
+      }],
+      group: ['loginusers.id'], // ✅ correct grouping alias based on DB
+      order: [[db.fn('SUM', db.col('expenses.amount')), 'DESC']]
     });
-
-    const result = leaderBoard.map(entry => ({
-      name: entry.loginUser.name,
-      totalExpense: entry.dataValues.totalExpense
-    }));
-
-    res.status(200).json(result);
+    res.status(200).json(leaderBoard);
   } catch (error) {
     console.error("Error in getPremiumExpense:", error);
     res.status(500).json({ error: "Failed to fetch leaderboard" });
