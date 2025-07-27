@@ -1,4 +1,6 @@
 import Expense from "../models/expense.js";
+import User from "../models/user.js";
+import { db } from "../utils/db.js";
 export const addExpense=async(req,res)=>{
     try {
         const {amount,description,category}=req.body;
@@ -23,16 +25,7 @@ export const showExpense=async(req,res)=>{
         console.log(err);
         return res.status(400).send({error:err,success:false})
     })
-    //  try {
-    //     const expenses = await Expense.findAll({
-    //         where:{
-    //             loginUserId: req.user.id
-    //         }
-    //     });
-    //     res.status(200).json(expenses);
-    // } catch (error) {
-    //     res.status(500).send("Error fetching expenses");
-    // }
+    
 }
 
 export const deleteExpense = async (req, res) => {
@@ -42,7 +35,7 @@ export const deleteExpense = async (req, res) => {
     const deletedCount = await Expense.destroy({
       where: {
         id: id,
-        loginUserId: req.user.id, // ensure user is deleting their own expense
+        loginUserId: req.user.id, 
       },
     });
 
@@ -54,5 +47,36 @@ export const deleteExpense = async (req, res) => {
   } catch (err) {
     console.error("Error deleting expense:", err);
     res.status(500).json({ error: "Error deleting expense" });
+  }
+};
+
+
+
+export const getPremiumExpense = async (req, res) => {
+  try {
+    const leaderBoard = await Expense.findAll({
+      attributes: [
+        "loginUserId",
+        [db.fn("SUM", db.col("amount")), "totalExpense"]
+      ],
+      include: [
+        {
+          model: User,
+          attributes: ["name"]
+        }
+      ],
+      group: ["loginUserId"],
+      order: [[db.fn("SUM", db.col("amount")), "DESC"]]
+    });
+
+    const result = leaderBoard.map(entry => ({
+      name: entry.loginUser.name,
+      totalExpense: entry.dataValues.totalExpense
+    }));
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error in getPremiumExpense:", error);
+    res.status(500).json({ error: "Failed to fetch leaderboard" });
   }
 };
