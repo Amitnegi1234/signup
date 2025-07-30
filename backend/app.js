@@ -10,7 +10,6 @@ app.use(cors());
 app.use(express.json());
 app.use(router);
 const port=3000;
-
 db.sync().then(()=>{
     try {
         app.listen(port,()=>{
